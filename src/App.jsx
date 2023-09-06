@@ -6,6 +6,9 @@ function App() {
 
   const [user, setUser] = useState({});
   const [token, setToken] = useState("");
+  const [getUsers, setGetUsers] = useState([]);
+  const [update, setUpdate] = useState(false);
+  const [friendsOfUser, setFriendsOfUser] = useState([]); 
 
 
   const userHandler = (event) => {
@@ -31,6 +34,35 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    const getFriends = async () => {
+      const response = await fetch("https://javascript27g-default-rtdb.firebaseio.com/equipo1/.json");
+      const data = await response.json();
+      setGetUsers(data);
+    }
+    getFriends();
+  }, []);
+
+  const addFriend = async (key) => {
+    const userKey = Object.keys(getUsers).filter(keyUser => keyUser == key);
+    const ObjectUser = [{
+      id: userKey[0],
+      name: getUsers[userKey].name,
+      email: getUsers[userKey].email
+    }]
+
+    setFriendsOfUser(ObjectUser);
+
+    console.log("friends of user");
+    console.log(friendsOfUser);
+    const response = await fetch(`https://javascript27g-default-rtdb.firebaseio.com/equipo1/${token}/friends.json`, {
+      method: "PATCH",
+      headers: { 'Content-Type': 'application/json' },
+      body: await JSON.stringify(friendsOfUser)
+    });
+    const data = await response.json();
+    console.log(data);
+  }
   return (
     <>
       <div className="container">
@@ -71,6 +103,17 @@ function App() {
           </div>
           <div className="col-md-6">
             <h1>Lista de amigos</h1>
+            <ul className="list-group">
+              {getUsers && Object.keys(getUsers).filter(user => user != token).map((key) => {
+                return (
+                  <li key={key} className="list-group-item">
+                  <p>Nombre: {getUsers[key].name}</p>
+                  <p>Correo: {getUsers[key].email}</p>
+                  <button className="btn btn-success" onClick={() => addFriend(key)}>Añadir como amigo</button>
+                </li>
+                )
+              })}
+            </ul>
           </div>
         </div>
       </div>
